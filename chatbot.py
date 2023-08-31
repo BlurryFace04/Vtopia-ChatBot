@@ -1,11 +1,9 @@
-# Import necessary modules
 import openai
 import streamlit as st
 import json
 from moralis import sol_api
 import requests
 
-# Initialize Moralis API
 api_key = st.secrets.moralis_api_key
 openai.api_key = st.secrets.openai_api_key
 
