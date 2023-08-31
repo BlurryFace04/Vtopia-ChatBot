@@ -186,7 +186,3 @@ if st.button('Submit'):
             cols[0].markdown(name_html, unsafe_allow_html=True)
             filtered_result = filter_nft_data(query, raw_result)
             st.write(filtered_result)
-
-
-            filtered_result = filter_nft_data(query, raw_result)
-            st.write(filtered_result)
