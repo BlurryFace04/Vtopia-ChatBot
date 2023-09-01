@@ -35,23 +35,25 @@ def get_nft_metadata(address):
     traits = {item["trait_type"]: item["value"] for item in attributes_list}
 
     combined_data = {
-        "name": detailed_response["name"],
-        "symbol": detailed_response["symbol"],
-        "mint": initial_response["mint"],
-        "description": detailed_response["description"],
-        "image": detailed_response["image"],
-        "external_url": detailed_response["external_url"],
-        "edition": detailed_response.get("edition", None),
-        "standard": initial_response["standard"],
-        "updateAuthority": initial_response["metaplex"]["updateAuthority"],
-        "sellerFeeBasisPoints": initial_response["metaplex"]["sellerFeeBasisPoints"],
-        "primarySaleHappened": initial_response["metaplex"]["primarySaleHappened"],
-        "owners": initial_response["metaplex"]["owners"],
-        "isMutable": initial_response["metaplex"]["isMutable"],
-        "masterEdition": initial_response["metaplex"]["masterEdition"],
-        "traits": traits,  # Using the transformed traits here
-        "properties": detailed_response["properties"]
+        "name": detailed_response.get("name"),
+        "symbol": detailed_response.get("symbol"),
+        "mint": initial_response.get("mint"),
+        "description": detailed_response.get("description"),
+        "image": detailed_response.get("image"),
+        "external_url": detailed_response.get("external_url"),
+        "edition": detailed_response.get("edition"),
+        "standard": initial_response.get("standard"),
+        "updateAuthority": initial_response.get("metaplex", {}).get("updateAuthority"),
+        "sellerFeeBasisPoints": initial_response.get("metaplex", {}).get("sellerFeeBasisPoints"),
+        "primarySaleHappened": initial_response.get("metaplex", {}).get("primarySaleHappened"),
+        "owners": initial_response.get("metaplex", {}).get("owners"),
+        "isMutable": initial_response.get("metaplex", {}).get("isMutable"),
+        "masterEdition": initial_response.get("metaplex", {}).get("masterEdition"),
+        "traits": traits,
+        "properties": detailed_response.get("properties")
     }
+
+    combined_data = {key: val for key, val in combined_data.items() if val is not None}
 
     return combined_data
 
