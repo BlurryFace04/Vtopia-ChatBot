@@ -1,8 +1,8 @@
 from moralis import sol_api
 import requests
+import streamlit as st
 
-api_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjAzNmVhNTU4LTMzNjgtNDkyZC1hY2Y3LTkyYTQxNGZlN2ViZSIsIm9yZ0lkIjoiMzU0MjQ5IiwidXNlcklkIjoiMzY0MDk5IiwidHlwZUlkIjoiZWI4MTQ1OWQtNWJiNC00YzFkLWFlODEtNTJmYmIyYjkxYzA0IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE2OTI3NjAwNzksImV4cCI6NDg0ODUyMDA3OX0.WRkS4hloajCawaSx01eW1INVZTEBNVFCTpFJtyyPAPc"  # Replace with your API key
-
+api_key = st.secrets.moralis_api_key
 
 def get_nft_balance(address):
     params = {
