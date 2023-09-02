@@ -7,7 +7,7 @@ from moralis_functions import get_nft_metadata, get_nft_image, get_nft_balance
 from hellomoon_functions import get_hello_moon_collection_id, get_mint_addresses
 from helius_functions import fetch_nft_data
 
-openai.api_key = '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'
+openai.api_key = st.secrets.openai_api_key
 
 
 def display_nft_with_image(nft):
