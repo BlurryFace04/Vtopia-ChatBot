@@ -23,7 +23,6 @@ def display_nft_with_image(nft):
     """
     cols[0].markdown(image_html, unsafe_allow_html=True)
     cols[0].write(f"<center><h6>{nft['name']}</h6></center>", unsafe_allow_html=True)
-    # nft_without_name = {key: val for key, val in nft.items() if key != 'name'}
     cols[1].write(nft)
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -111,6 +110,42 @@ def get_nft_metadata_by_name(nft_name):
     return get_nft_metadata_from_mongodb(finalNFTName)
 
 
+def show_nft_data(nft_data):
+    def safe_get(dct, keys):
+        for key in keys:
+            try:
+                dct = dct[key]
+            except (TypeError, KeyError, IndexError):
+                return None
+        return dct
+
+    attributes = safe_get(nft_data, ["content", "metadata", "attributes"]) or []
+    traits = {attr.get("trait_type"): attr.get("value") for attr in attributes}
+
+    restructured_data = {
+        "mint_address": safe_get(nft_data, ["id"]),
+        "name": safe_get(nft_data, ["content", "metadata", "name"]),
+        "symbol": safe_get(nft_data, ["content", "metadata", "symbol"]),
+        "description": safe_get(nft_data, ["content", "metadata", "description"]),
+        "image": safe_get(nft_data, ["content", "links", "image"]),
+        "traits": traits,
+        "collection": safe_get(nft_data, ["grouping", 0, "group_value"]),
+        "website": safe_get(nft_data, ["content", "links", "external_url"]),
+        "files": safe_get(nft_data, ["content", "files"]),
+        "creators": safe_get(nft_data, ["creators"]),
+        "royalty": safe_get(nft_data, ["royalty"]),
+        "authorities": safe_get(nft_data, ["authorities"]),
+        "supply": safe_get(nft_data, ["supply"]),
+        "burnt": safe_get(nft_data, ["burnt"]),
+        "interface": safe_get(nft_data, ["interface"]),
+        "mutable": safe_get(nft_data, ["mutable"])
+    }
+
+    restructured_data = {k: v for k, v in restructured_data.items() if v is not None}
+
+    return restructured_data
+
+
 st.title('Vtopia AI ChatBot')
 query = st.text_input("Ask for NFTs in your wallet, or ask about a specific NFT by its mint address:")
 
@@ -178,5 +213,17 @@ if st.button('Submit'):
             st.write(filtered_result)
 
         elif function_name == "get_nft_metadata_by_name":
-            raw_result = get_nft_metadata_by_name(**function_args)
-            st.write(raw_result)
+            database_result = get_nft_metadata_by_name(**function_args)
+            raw_result = show_nft_data(database_result)
+            solscan_url = f"https://solscan.io/token/{raw_result['mint_address']}"
+            cols = st.columns([1, 1])
+            image_html = f"""
+            <a href="{solscan_url}" target="_blank">
+                <img src="{raw_result['image']}" style="border-radius: 15px; width: 350px;">
+            </a>
+            """
+            cols[0].markdown(image_html, unsafe_allow_html=True)
+            name_html = f"<center><h3>{raw_result['name']}</h3></center>"
+            cols[0].markdown(name_html, unsafe_allow_html=True)
+            filtered_result = filter_nft_data(query, raw_result)
+            st.write(filtered_result)
