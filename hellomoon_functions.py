@@ -1,7 +1,7 @@
 import requests
+import streamlit as st
 
-token = "d2445c17-080e-4438-894a-5151620ef396"
-# collection_name = "the heist"
+token = st.secrets.hellomoon_api_key
 
 
 def get_hello_moon_collection_id(collection_name: str) -> tuple:
@@ -61,10 +61,3 @@ def get_mint_addresses(hello_moon_id: str) -> list:
 
     print(f"Found {len(mint_addresses)} mint addresses.")
     return mint_addresses
-
-
-# collectionId = get_hello_moon_collection_id(collection_name)
-# print(collectionId)
-# mint_addresses = get_mint_addresses(collectionId)
-# print(mint_addresses)
-# print("THESE MANY MINT ADDRESSES: ", len(mint_addresses))
