@@ -1,26 +1,13 @@
-import os
-from pymongo import MongoClient, InsertOne, ASCENDING, errors
+from pymongo import MongoClient, InsertOne
 from typing import Optional, Dict
 from datetime import datetime
+import streamlit as st
 
-client = MongoClient(os.environ['MONGODB_URI'])
+client = MongoClient(st.secrets.MONGODB_URI)
 db = client['Vtopia']
 nft_metadata_collection = db['nft_metadata']
 collection_info_collection = db['collection_info']
 failed_chunks_collection = db['failed_chunks']
-
-# try:
-#     nft_metadata_collection.create_index("id", unique=True)
-# except errors.OperationFailure as e:
-#     print(f"Error creating index on metadata_collection: {e}")
-# try:
-#     collection_info_collection.create_index("helloMoonCollectionId", unique=True)
-# except errors.OperationFailure as e:
-#     print(f"Error creating index on collection_names_collection: {e}")
-# try:
-#     nft_metadata_collection.create_index([("content.metadata.name", ASCENDING)])
-# except errors.OperationFailure as e:
-#     print(f"Error creating index for content.metadata.name on metadata_collection: {e}")
 
 
 def insert_nft_metadata(metadata, collection):
