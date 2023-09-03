@@ -15,7 +15,6 @@ def insert_nft_metadata(metadata, collection):
         results = [{**doc['result'], 'collection': collection} for doc in metadata]
 
         chunks = [results[i:i + 7000] for i in range(0, len(results), 7000)]
-
         for chunk in chunks:
             insert_requests = [InsertOne(doc) for doc in chunk]
             nft_metadata_collection.bulk_write(insert_requests, ordered=False)
@@ -67,6 +66,14 @@ def collection_info_exists(collectionId: str) -> bool:
 
 def get_nft_metadata_from_mongodb(nft_name: str) -> Optional[Dict]:
     nft_document = nft_metadata_collection.find_one({"content.metadata.name": nft_name})
+
+    if nft_document:
+        return nft_document
+    return None
+
+
+def get_nft_metadata_from_mongodb_by_address(address: str) -> Optional[Dict]:
+    nft_document = nft_metadata_collection.find_one({"id": address})
 
     if nft_document:
         return nft_document
