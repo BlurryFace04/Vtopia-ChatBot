@@ -2,28 +2,27 @@ import openai
 import streamlit as st
 import json
 import time
-from mongodb_functions import insert_collection_info, insert_nft_metadata, insert_failed_chunks, collection_info_exists, get_nft_metadata_from_mongodb
-from moralis_functions import get_nft_metadata, get_nft_image, get_nft_balance
+from mongodb_functions import insert_collection_info, insert_nft_metadata, insert_failed_chunks, collection_info_exists, get_nft_metadata_from_mongodb, get_nft_metadata_from_mongodb_by_address
 from hellomoon_functions import get_hello_moon_collection_id, get_mint_addresses
-from helius_functions import fetch_nft_data
+from helius_functions import fetch_nft_data, get_nfts_by_owner
 
 openai.api_key = st.secrets.openai_api_key
 
 
 def display_nft_with_image(nft):
     cols = st.columns([2, 5])
-    image_url = get_nft_image(nft['mint'])
-    solscan_url = f"https://solscan.io/token/{nft['mint']}"
+    solscan_url = f"https://solscan.io/token/{nft['mint_address']}"
     image_html = f"""
     <a href="{solscan_url}" target="_blank">
-        <img src="{image_url}" style="border-radius: 8px; width: 200px;">
+        <img src="{nft['image']}" style="border-radius: 8px; width: 200px;">
     </a>
     <br>
     <br>
     """
     cols[0].markdown(image_html, unsafe_allow_html=True)
     cols[0].write(f"<center><h6>{nft['name']}</h6></center>", unsafe_allow_html=True)
-    cols[1].write(nft)
+    nft_to_display = {k: v for k, v in nft.items() if k != 'image' and v != ""}
+    cols[1].write(nft_to_display)
     st.markdown("<br>", unsafe_allow_html=True)
 
 
@@ -67,6 +66,15 @@ def chunker(seq, size):
     return (seq[pos:pos + size] for pos in range(0, len(seq), size))
 
 
+def get_nft_metadata_by_address(address):
+    nft_metadata = get_nft_metadata_from_mongodb_by_address(address)
+    if nft_metadata:
+        print("Found NFT metadata in MongoDB")
+        return show_nft_data(nft_metadata)
+    else:
+        return show_nft_data(fetch_nft_data(address)[0]["result"])
+
+
 def get_nft_metadata_by_name(nft_name):
     collection_name = nft_name.split('#')[0].strip()
     collection_edition = '#' + nft_name.split('#')[1].strip()
@@ -107,7 +115,7 @@ def get_nft_metadata_by_name(nft_name):
 
         insert_nft_metadata(all_metadata, mongodb_collection_info_id)
 
-    return get_nft_metadata_from_mongodb(finalNFTName)
+    return show_nft_data(get_nft_metadata_from_mongodb(finalNFTName))
 
 
 def show_nft_data(nft_data):
@@ -152,7 +160,7 @@ query = st.text_input("Ask for NFTs in your wallet, or ask about a specific NFT 
 if st.button('Submit'):
     functions = [
         {
-            "name": "get_nft_balance",
+            "name": "get_nfts_by_owner",
             "description": "Get the SPL NFT balance of an address",
             "parameters": {
                 "type": "object",
@@ -163,7 +171,7 @@ if st.button('Submit'):
             },
         },
         {
-            "name": "get_nft_metadata",
+            "name": "get_nft_metadata_by_address",
             "description": "Get metadata of a SPL NFT using its mint address",
             "parameters": {
                 "type": "object",
@@ -192,14 +200,14 @@ if st.button('Submit'):
         function_name = response_message["function_call"]["name"]
         function_args = json.loads(response_message["function_call"]["arguments"])
 
-        if function_name == "get_nft_balance":
-            nfts = get_nft_balance(**function_args)
+        if function_name == "get_nfts_by_owner":
+            nfts = get_nfts_by_owner(**function_args)
             for nft in nfts:
                 display_nft_with_image(nft)
 
-        elif function_name == "get_nft_metadata":
-            raw_result = get_nft_metadata(**function_args)
-            solscan_url = f"https://solscan.io/token/{raw_result['mint']}"
+        elif function_name == "get_nft_metadata_by_address":
+            raw_result = get_nft_metadata_by_address(**function_args)
+            solscan_url = f"https://solscan.io/token/{raw_result['mint_address']}"
             cols = st.columns([1, 1])
             image_html = f"""
             <a href="{solscan_url}" target="_blank">
@@ -213,8 +221,7 @@ if st.button('Submit'):
             st.write(filtered_result)
 
         elif function_name == "get_nft_metadata_by_name":
-            database_result = get_nft_metadata_by_name(**function_args)
-            raw_result = show_nft_data(database_result)
+            raw_result = get_nft_metadata_by_name(**function_args)
             solscan_url = f"https://solscan.io/token/{raw_result['mint_address']}"
             cols = st.columns([1, 1])
             image_html = f"""
