@@ -3,7 +3,7 @@ import streamlit as st
 import json
 import time
 from mongodb_functions import insert_collection_info, insert_nft_metadata, insert_failed_chunks, collection_info_exists, get_nft_metadata_from_mongodb, get_nft_metadata_from_mongodb_by_address
-from hellomoon_functions import get_hello_moon_collection_id, get_mint_addresses
+from hellomoon_functions import get_hello_moon_collection_id, get_mint_addresses, fetch_collection_stats
 from helius_functions import fetch_nft_data, get_nfts_by_owner
 
 openai.api_key = st.secrets.openai_api_key
