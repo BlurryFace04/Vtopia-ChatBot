@@ -28,8 +28,12 @@ def display_nft_with_image(nft):
 
 def ask_gpt(query, functions=[]):
     messages = [{"role": "user", "content": query}]
-    response = openai.ChatCompletion.create(model="gpt-3.5-turbo-0613", messages=messages, functions=functions)
-    return response["choices"][0]["message"]
+    try:
+        response = openai.ChatCompletion.create(model="gpt-3.5-turbo-0613", messages=messages, functions=functions)
+        return response["choices"][0]["message"]
+    except openai.error.OpenAIError:
+        print(openai.error.OpenAIError)
+        return {"Error": "OpenAI Server Down"}
 
 
 def filter_nft_data(prompt, nft_data):
@@ -118,6 +122,11 @@ def get_nft_metadata_by_name(nft_name):
     return show_nft_data(get_nft_metadata_from_mongodb(finalNFTName))
 
 
+def get_collection_stats(collection_name):
+    collectionId, retrievedCollectionName = get_hello_moon_collection_id(collection_name)
+    return fetch_collection_stats(collectionId)
+
+
 def show_nft_data(nft_data):
     def safe_get(dct, keys):
         for key in keys:
@@ -191,10 +200,25 @@ if st.button('Submit'):
                 },
                 "required": ["nft_name"],
             },
+        },
+        {
+            "name": "get_collection_stats",
+            "description": "Get the stats of an NFT collection",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "collection_name": {"type": "string",
+                                        "description": "Name of the NFT collection to fetch stats for"}
+                },
+                "required": ["collection_name"],
+            },
         }
     ]
 
     response_message = ask_gpt(query, functions)
+
+    if "Error" in response_message:
+        st.write(response_message)
 
     if response_message.get("function_call"):
         function_name = response_message["function_call"]["name"]
@@ -231,6 +255,20 @@ if st.button('Submit'):
             """
             cols[0].markdown(image_html, unsafe_allow_html=True)
             name_html = f"<center><h3>{raw_result['name']}</h3></center>"
+            cols[0].markdown(name_html, unsafe_allow_html=True)
+            filtered_result = filter_nft_data(query, raw_result)
+            st.write(filtered_result)
+
+        elif function_name == "get_collection_stats":
+            raw_result = get_collection_stats(**function_args)
+            cols = st.columns([1, 1])
+            image_html = f"""
+            <a href="{raw_result["website"]}" target="_blank">
+                <img src="{raw_result['image']}" style="border-radius: 15px; width: 350px;">
+            </a>
+            """
+            cols[0].markdown(image_html, unsafe_allow_html=True)
+            name_html = f"<center><h3>{raw_result['collectionName']}</h3></center>"
             cols[0].markdown(name_html, unsafe_allow_html=True)
             filtered_result = filter_nft_data(query, raw_result)
             st.write(filtered_result)
