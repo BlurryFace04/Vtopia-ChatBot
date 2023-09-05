@@ -183,7 +183,51 @@ col1, col2, col3, col4 = st.columns([2.3, 1.1, 5, 1.5])
 col2.image('white-logo.png', width=80)
 col3.title("Vtopia SeraAI")
 
-query = st.text_input("Ask for NFTs in your wallet, or ask about a specific NFT by its mint address:")
+# Sidebar title
+st.sidebar.title("Vtopia SeraAI Features")
+
+# Introduction
+st.sidebar.markdown("Welcome to **Vtopia SeraAI**! Here's a quick guide on how to interact with the available features:")
+
+# Feature 1: Ask for NFTs in your wallet
+st.sidebar.markdown("### 1. NFTs in Your Wallet")
+st.sidebar.markdown("🔍 Query the NFTs present in your Solana wallet.")
+st.sidebar.markdown("**Example:**")
+st.sidebar.code("'Show me the NFTs in my wallet: [Your Wallet Address]'")
+
+# Feature 2: Ask about a specific NFT by its mint address
+st.sidebar.markdown("### 2. NFT Details by Mint Address")
+st.sidebar.markdown("🖼 Get detailed information of a specific NFT using its mint address.")
+st.sidebar.markdown("**Example:**")
+st.sidebar.code("'Tell me about the NFT with mint address: [Mint Address]'")
+st.sidebar.caption('You can ask it to query only specific properties of the NFT as well.')
+
+# Feature 3: Ask about an NFT by its name
+st.sidebar.markdown("### 3. NFT Details by Name")
+st.sidebar.markdown("🏷 Query details of an NFT by its name.")
+st.sidebar.markdown("**Example:**")
+st.sidebar.code("'Tell me about the NFT named: [NFT Name]'")
+st.sidebar.caption('You can ask it to query only specific properties of the NFT as well.')
+
+# Feature 4: Get stats of an NFT collection
+st.sidebar.markdown("### 4. NFT Collection Stats")
+st.sidebar.markdown("📊 Fetch statistics of a specific NFT collection.")
+st.sidebar.markdown("**Example:**")
+st.sidebar.code("'Show me the stats for the [Collection Name] collection'")
+st.sidebar.caption('You can ask it to query only specific properties of the collection as well.')
+
+
+# Feature 5: Get popular collections
+st.sidebar.markdown("### 5. Popular NFT Collections")
+st.sidebar.markdown("🌟 Discover popular NFT collections for a specified time range.")
+st.sidebar.markdown("**Example:**")
+st.sidebar.code("'Show me the popular collections for the last 7 days'")
+st.sidebar.caption('You can specify the number of top collections (1-50) and time range (1h, 1d, 7d, 30d) to fetch.')
+
+st.sidebar.markdown("---")
+st.sidebar.markdown("For more details, visit our [official website](https://vtopia.io).")
+
+query = st.text_input("Ask about NFTs in your wallet, details by mint address or name, collection stats, or discover popular collections:")
 
 if st.button('Submit'):
     functions = [
