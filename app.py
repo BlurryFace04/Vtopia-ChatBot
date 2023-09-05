@@ -227,139 +227,233 @@ st.sidebar.caption('You can specify the number of top collections (1-50) and tim
 st.sidebar.markdown("---")
 st.sidebar.markdown("For more details, visit our [official website](https://vtopia.io).")
 
-query = st.text_input("Ask about NFTs in your wallet, details by mint address or name, collection stats, or discover popular collections:")
+with tab1:
+    query = st.text_input("Ask about NFTs in your wallet, details by mint address or name, collection stats, or discover popular collections:")
 
-with st.spinner('Fetching NFT details...'):
     if st.button('Submit'):
-        functions = [
-            {
-                "name": "get_nfts_by_owner",
-                "description": "Get the SPL NFT balance of an address",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "address": {"type": "string", "description": "Solana address to fetch NFT balance for"}
-                    },
-                    "required": ["address"],
-                },
-            },
-            {
-                "name": "get_nft_metadata_by_address",
-                "description": "Get metadata of a SPL NFT using its mint address",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "address": {"type": "string", "description": "Solana mint address to fetch NFT metadata for"}
-                    },
-                    "required": ["address"],
-                },
-            },
-            {
-                "name": "get_nft_metadata_by_name",
-                "description": "Get metadata of an SPL NFT using its name",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "nft_name": {"type": "string", "description": "Name of the NFT to fetch metadata for"}
-                    },
-                    "required": ["nft_name"],
-                },
-            },
-            {
-                "name": "get_collection_stats",
-                "description": "Get the stats of an NFT collection",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "collection_name": {"type": "string",
-                                            "description": "Name of the NFT collection to fetch stats for"}
-                    },
-                    "required": ["collection_name"],
-                },
-            },
-            {
-                "name": "get_popular_collections",
-                "description": "Fetch the popular collections for a given time range and limit.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "time_range": {
-                            "type": "string",
-                            "enum": ["1h", "1d", "7d", "30d"],
-                            "description": "The time range to fetch popular collections for."
+        with st.spinner('Fetching NFT details...'):
+            functions = [
+                {
+                    "name": "get_nfts_by_owner",
+                    "description": "Get the SPL NFT balance of an address",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "address": {"type": "string", "description": "Solana address to fetch NFT balance for"}
                         },
-                        "top": {
-                            "type": "integer",
-                            "description": "The number of popular collections to fetch. Default to 10."
-                        }
+                        "required": ["address"],
                     },
-                    "required": ["time_range", "top"]
+                },
+                {
+                    "name": "get_nft_metadata_by_address",
+                    "description": "Get metadata of a SPL NFT using its mint address",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "address": {"type": "string", "description": "Solana mint address to fetch NFT metadata for"}
+                        },
+                        "required": ["address"],
+                    },
+                },
+                {
+                    "name": "get_nft_metadata_by_name",
+                    "description": "Get metadata of an SPL NFT using its name",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "nft_name": {"type": "string", "description": "Name of the NFT to fetch metadata for"}
+                        },
+                        "required": ["nft_name"],
+                    },
+                },
+                {
+                    "name": "get_collection_stats",
+                    "description": "Get the stats of an NFT collection",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "collection_name": {"type": "string",
+                                                "description": "Name of the NFT collection to fetch stats for"}
+                        },
+                        "required": ["collection_name"],
+                    },
+                },
+                {
+                    "name": "get_popular_collections",
+                    "description": "Fetch the popular collections for a given time range and limit.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "time_range": {
+                                "type": "string",
+                                "enum": ["1h", "1d", "7d", "30d"],
+                                "description": "The time range to fetch popular collections for."
+                            },
+                            "top": {
+                                "type": "integer",
+                                "description": "The number of popular collections to fetch. Default to 10."
+                            }
+                        },
+                        "required": ["time_range", "top"]
+                    }
                 }
-            }
-        ]
-    
-        response_message = ask_gpt(query, functions)
-    
-        if "Error" in response_message:
-            st.write(response_message)
-    
-        if response_message.get("function_call"):
-            function_name = response_message["function_call"]["name"]
-            function_args = json.loads(response_message["function_call"]["arguments"])
-    
-            if function_name == "get_nfts_by_owner":
-                nfts = get_nfts_by_owner(**function_args)
-                for nft in nfts:
-                    display_nft_with_image(nft)
-    
-            elif function_name == "get_nft_metadata_by_address":
-                raw_result = get_nft_metadata_by_address(**function_args)
-                solscan_url = f"https://solscan.io/token/{raw_result['mint_address']}"
-                cols = st.columns([1, 1])
-                image_html = f"""
-                <a href="{solscan_url}" target="_blank">
-                    <img src="{raw_result['image']}" style="border-radius: 15px; width: 350px;">
-                </a>
-                """
-                cols[0].markdown(image_html, unsafe_allow_html=True)
-                name_html = f"<center><h3>{raw_result['name']}</h3></center>"
-                cols[0].markdown(name_html, unsafe_allow_html=True)
-                filtered_result = filter_nft_data(query, raw_result)
-                st.write(filtered_result)
-    
-            elif function_name == "get_nft_metadata_by_name":
-                raw_result = get_nft_metadata_by_name(**function_args)
-                if "Error" in raw_result:
-                    st.write(raw_result)
-                    st.stop()
-                solscan_url = f"https://solscan.io/token/{raw_result['mint_address']}"
-                cols = st.columns([1, 1])
-                image_html = f"""
-                <a href="{solscan_url}" target="_blank">
-                    <img src="{raw_result['image']}" style="border-radius: 15px; width: 350px;">
-                </a>
-                """
-                cols[0].markdown(image_html, unsafe_allow_html=True)
-                name_html = f"<center><h3>{raw_result['name']}</h3></center>"
-                cols[0].markdown(name_html, unsafe_allow_html=True)
-                filtered_result = filter_nft_data(query, raw_result)
-                st.write(filtered_result)
-    
-            elif function_name == "get_collection_stats":
-                raw_result = get_collection_stats(**function_args)
-                cols = st.columns([1, 1])
-                image_html = f"""
-                <a href="{raw_result["website"]}" target="_blank">
-                    <img src="{raw_result['image']}" style="border-radius: 15px; width: 350px;">
-                </a>
-                """
-                cols[0].markdown(image_html, unsafe_allow_html=True)
-                name_html = f"<center><h3>{raw_result['collectionName']}</h3></center>"
-                cols[0].markdown(name_html, unsafe_allow_html=True)
-                filtered_result = filter_nft_data(query, raw_result)
-                st.write(filtered_result)
-    
-            elif function_name == "get_popular_collections":
-                popular_collections = get_popular_collections(**function_args)
-                for collection in popular_collections:
-                    display_nft_with_image(collection)
+            ]
+
+            response_message = ask_gpt(query, functions)
+
+            if "Error" in response_message:
+                st.write(response_message)
+
+            if response_message.get("function_call"):
+                function_name = response_message["function_call"]["name"]
+                function_args = json.loads(response_message["function_call"]["arguments"])
+
+                if function_name == "get_nfts_by_owner":
+                    nfts = get_nfts_by_owner(**function_args)
+                    for nft in nfts:
+                        display_nft_with_image(nft)
+
+                elif function_name == "get_nft_metadata_by_address":
+                    raw_result = get_nft_metadata_by_address(**function_args)
+                    solscan_url = f"https://solscan.io/token/{raw_result['mint_address']}"
+                    cols = st.columns([1, 1])
+                    image_html = f"""
+                    <a href="{solscan_url}" target="_blank">
+                        <img src="{raw_result['image']}" style="border-radius: 15px; width: 350px;">
+                    </a>
+                    """
+                    cols[0].markdown(image_html, unsafe_allow_html=True)
+                    name_html = f"<center><h3>{raw_result['name']}</h3></center>"
+                    cols[0].markdown(name_html, unsafe_allow_html=True)
+                    filtered_result = filter_nft_data(query, raw_result)
+                    st.write(filtered_result)
+
+                elif function_name == "get_nft_metadata_by_name":
+                    raw_result = get_nft_metadata_by_name(**function_args)
+                    if "Error" in raw_result:
+                        st.write(raw_result)
+                        st.stop()
+                    solscan_url = f"https://solscan.io/token/{raw_result['mint_address']}"
+                    cols = st.columns([1, 1])
+                    image_html = f"""
+                    <a href="{solscan_url}" target="_blank">
+                        <img src="{raw_result['image']}" style="border-radius: 15px; width: 350px;">
+                    </a>
+                    """
+                    cols[0].markdown(image_html, unsafe_allow_html=True)
+                    name_html = f"<center><h3>{raw_result['name']}</h3></center>"
+                    cols[0].markdown(name_html, unsafe_allow_html=True)
+                    filtered_result = filter_nft_data(query, raw_result)
+                    st.write(filtered_result)
+
+                elif function_name == "get_collection_stats":
+                    raw_result = get_collection_stats(**function_args)
+                    cols = st.columns([1, 1])
+                    image_html = f"""
+                    <a href="{raw_result["website"]}" target="_blank">
+                        <img src="{raw_result['image']}" style="border-radius: 15px; width: 350px;">
+                    </a>
+                    """
+                    cols[0].markdown(image_html, unsafe_allow_html=True)
+                    name_html = f"<center><h3>{raw_result['collectionName']}</h3></center>"
+                    cols[0].markdown(name_html, unsafe_allow_html=True)
+                    filtered_result = filter_nft_data(query, raw_result)
+                    st.write(filtered_result)
+
+                elif function_name == "get_popular_collections":
+                    popular_collections = get_popular_collections(**function_args)
+                    for collection in popular_collections:
+                        display_nft_with_image(collection)
+
+features = [
+    # Existing Features
+    {
+        "title": "🔍 View Your NFTs",
+        "description": "Simply input your Solana wallet address and see all the NFTs you own.",
+        "stage": "Launched",
+    },
+    {
+        "title": "🔖 Details by Mint Address",
+        "description": "Want to know more about an NFT? Just provide its mint address. You can also ask specific questions or request particular details.",
+        "stage": "Launched",
+    },
+    {
+        "title": "📛 Details by NFT Name",
+        "description": "Search for an NFT using its name. Ask specific questions or request only the details you're interested in.",
+        "stage": "Launched",
+    },
+    {
+        "title": "📊 Collection Stats",
+        "description": "Get insights on any NFT collection. Ask about specific stats or pose a question about the collection.",
+        "stage": "Launched",
+    },
+    {
+        "title": "🌟 Popular Collections",
+        "description": "Discover the trending NFT collections. Choose from time ranges of 1 hour, 1 day, 7 days, or 30 days, and select your desired number of top collections (from 1 to 50).",
+        "stage": "Launched",
+    },
+    # Upcoming Features
+    {
+        "title": "📝 List NFT on Vtopia",
+        "description": "List NFT by its name on Vtopia",
+        "stage": "Development",
+    },
+    {
+        "title": "🛍️ Buy NFT from Vtopia",
+        "description": "You can buy NFT just by its name",
+        "stage": "Development",
+    },
+    {
+        "title": "🔥 Bulk Actions",
+        "description": "Buy/List Multiple NFT from Vtopia in single prompt",
+        "stage": "Development",
+    },
+    {
+        "title": "💼 Make collection offer",
+        "description": "You can make collection offers with global traits on Vtopia by collection name",
+        "stage": "Development",
+    },
+    {
+        "title": "🤝 Make/Accept Offer",
+        "description": "Make or accept offers for NFTs on Vtopia",
+        "stage": "Development",
+    }
+]
+
+STAGE_COLORS = {
+    "Launched": "rgba(76, 175, 80, 0.5)",  # Greenish
+    "Development": "rgba(255, 193, 7, 0.5)"  # Yellowish
+}
+
+
+def _get_stage_tag(stage):
+    color = STAGE_COLORS.get(stage, "rgba(206, 205, 202, 0.5)")
+    return (
+        f'<span style="background-color: {color}; padding: 1px 6px; '
+        "margin: 0 5px; display: inline; vertical-align: middle; "
+        f"border-radius: 0.25rem; font-size: 0.75rem; font-weight: 400; "
+        f'white-space: nowrap">{stage}'
+        "</span>"
+    )
+
+
+with tab2:
+    # Launched Features
+    st.markdown("## 🚀 September 2023")
+    st.markdown("<br>", unsafe_allow_html=True)  # Adding blank space
+    for feature in features:
+        if feature["stage"] == "Launched":
+            stage_tag = _get_stage_tag(feature["stage"])
+            st.markdown(f"#### {feature['title']} {stage_tag}", unsafe_allow_html=True)
+            st.markdown(f"<div style='padding-left: 38px; margin-bottom: 15px;'><span style='color: gray;'>{feature['description']}</span></div>", unsafe_allow_html=True)
+
+    st.markdown("---", unsafe_allow_html=True)
+
+    # Development Features
+    st.markdown("## 🛠️ October 2023")
+    st.markdown("<br>", unsafe_allow_html=True)  # Adding blank space
+    for feature in features:
+        if feature["stage"] != "Launched":
+            stage_tag = _get_stage_tag(feature["stage"])
+            st.markdown(f"#### {feature['title']} {stage_tag}", unsafe_allow_html=True)
+            st.markdown(f"<div style='padding-left: 38px; margin-bottom: 15px;'><span style='color: gray;'>{feature['description']}</span></div>", unsafe_allow_html=True)
