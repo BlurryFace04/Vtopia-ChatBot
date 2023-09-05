@@ -92,7 +92,10 @@ def get_nft_metadata_by_address(address):
 
 def get_nft_metadata_by_name(nft_name):
     collection_name = nft_name.split('#')[0].strip()
-    collection_edition = '#' + nft_name.split('#')[1].strip()
+    try:
+        collection_edition = '#' + nft_name.split('#')[1].strip()
+    except:
+        return {"Error": "Specify the edition of the NFT you are looking for, or if you are looking for a collection, specify the word 'collection' somewhere in the prompt'"}
     print(f"Collection Name: {collection_name}")
 
     collectionId, retrievedCollectionName = get_hello_moon_collection_id(collection_name)
@@ -174,7 +177,12 @@ def show_nft_data(nft_data):
     return restructured_data
 
 
-st.title('Vtopia AI ChatBot')
+st.set_page_config(page_title="Vtopia SeraAI", page_icon="white-logo.png")
+
+col1, col2, col3, col4 = st.columns([2.3, 1.1, 5, 1.5])
+col2.image('white-logo.png', width=80)
+col3.title("Vtopia SeraAI")
+
 query = st.text_input("Ask for NFTs in your wallet, or ask about a specific NFT by its mint address:")
 
 if st.button('Submit'):
@@ -276,6 +284,9 @@ if st.button('Submit'):
 
         elif function_name == "get_nft_metadata_by_name":
             raw_result = get_nft_metadata_by_name(**function_args)
+            if "Error" in raw_result:
+                st.write(raw_result)
+                st.stop()
             solscan_url = f"https://solscan.io/token/{raw_result['mint_address']}"
             cols = st.columns([1, 1])
             image_html = f"""
