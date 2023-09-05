@@ -5,20 +5,31 @@ import time
 from mongodb_functions import insert_collection_info, insert_nft_metadata, insert_failed_chunks, collection_info_exists, get_nft_metadata_from_mongodb, get_nft_metadata_from_mongodb_by_address
 from hellomoon_functions import get_hello_moon_collection_id, get_mint_addresses, fetch_collection_stats
 from helius_functions import fetch_nft_data, get_nfts_by_owner
+from magiceden_functions import get_popular_collections
 
 openai.api_key = st.secrets.openai_api_key
 
 
 def display_nft_with_image(nft):
     cols = st.columns([2, 5])
-    solscan_url = f"https://solscan.io/token/{nft['mint_address']}"
-    image_html = f"""
-    <a href="{solscan_url}" target="_blank">
-        <img src="{nft['image']}" style="border-radius: 8px; width: 200px;">
-    </a>
-    <br>
-    <br>
-    """
+    if nft.get('mint_address'):
+        solscan_url = f"https://solscan.io/token/{nft['mint_address']}"
+        image_html = f"""
+        <a href="{solscan_url}" target="_blank">
+            <img src="{nft['image']}" style="border-radius: 8px; width: 200px;">
+        </a>
+        <br>
+        <br>
+        """
+    else:
+        magiceden_url = f"https://magiceden.io/marketplace/{nft['symbol']}"
+        image_html = f"""
+        <a href="{magiceden_url}" target="_blank">
+            <img src="{nft['image']}" style="border-radius: 8px; width: 200px;">
+        </a>
+        <br>
+        <br>
+        """
     cols[0].markdown(image_html, unsafe_allow_html=True)
     cols[0].write(f"<center><h6>{nft['name']}</h6></center>", unsafe_allow_html=True)
     nft_to_display = {k: v for k, v in nft.items() if k != 'image' and v != ""}
@@ -212,6 +223,25 @@ if st.button('Submit'):
                 },
                 "required": ["collection_name"],
             },
+        },
+        {
+            "name": "get_popular_collections",
+            "description": "Fetch the popular collections for a given time range and limit.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "time_range": {
+                        "type": "string",
+                        "enum": ["1h", "1d", "7d", "30d"],
+                        "description": "The time range to fetch popular collections for."
+                    },
+                    "top": {
+                        "type": "integer",
+                        "description": "The number of popular collections to fetch. Default to 10."
+                    }
+                },
+                "required": ["time_range", "top"]
+            }
         }
     ]
 
@@ -272,3 +302,8 @@ if st.button('Submit'):
             cols[0].markdown(name_html, unsafe_allow_html=True)
             filtered_result = filter_nft_data(query, raw_result)
             st.write(filtered_result)
+
+        elif function_name == "get_popular_collections":
+            popular_collections = get_popular_collections(**function_args)
+            for collection in popular_collections:
+                display_nft_with_image(collection)
