@@ -183,6 +183,8 @@ col1, col2, col3, col4 = st.columns([2.3, 1.1, 5, 1.5])
 col2.image('white-logo.png', width=80)
 col3.title("Vtopia SeraAI")
 
+tab1, tab2 = st.tabs(["SeraAI", "Roadmap"])
+
 # Sidebar title
 st.sidebar.title("Vtopia SeraAI Features")
 
